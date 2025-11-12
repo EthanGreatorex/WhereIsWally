@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { GameData, LeaderBoardEntry } from "../types/types";
-import { fetchLeaderboard } from "../utils/gameData";
+import { fetchLeaderboard, addPlayerToLeadeboard } from "../utils/gameData";
 import Logo from "../assets/logo-bg-removed.png";
 import { FaTrophy } from "react-icons/fa";
 import { FaRegSnowflake } from "react-icons/fa";
@@ -242,6 +242,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
     setSubmitMessage(null);
     try {
       setSubmitMessage("Submitted — thanks!");
+      addPlayerToLeadeboard(gameId, username, elapsedTime);
       setTimeout(() => {
         setShowModal(false);
       }, 800);

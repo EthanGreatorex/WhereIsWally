@@ -28,7 +28,7 @@ export async function fetchLeaderboard(
     );
     if (response.status === 200) {
       const data = await response.json();
-      
+
       let entries: unknown[] = [];
       if (Array.isArray(data)) entries = data as unknown[];
       else if (data && typeof data === "object") entries = [data as unknown];
@@ -63,5 +63,36 @@ export async function fetchLeaderboard(
   } catch (error) {
     console.error("Error fetching leaderboard data:", error);
     return "Error fetching leaderboard data";
+  }
+}
+
+export async function addPlayerToLeadeboard(
+  gameId: string,
+  username: string,
+  time: number
+) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/games/leaderboard/${gameId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          playerName: username,
+          time: time,
+        }),
+      }
+    );
+    if (response.status === 201) {
+      return;
+    } else {
+      throw new Error(
+        `Failed to submit leaderboard entry, status code: ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error("Error submitting leaderboard entry:", error);
   }
 }

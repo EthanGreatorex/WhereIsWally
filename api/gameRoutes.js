@@ -47,4 +47,22 @@ gameRoutes.route("/games/leaderboard/:id").get(async (req, res) => {
   }
 });
 
+// 4 Add a player to the leaderboard
+// http://localhost:3000/games/leaderboard/6914722b2dfb703149c28364
+gameRoutes.route("/games/leaderboard/:id").post(async (req, res) => {
+  let db = database.getDb();
+  try {
+    const newPlayer = {
+      gameId: new ObjectId(req.params.id),
+      playerName: req.body.playerName,
+      time: req.body.time,
+    };
+    const result = await db.collection("scores").insertOne(newPlayer);
+    res.json({ message: "Player added to leaderboard", result: result });
+  } catch (error) {
+    console.error("Error adding player to leaderboard:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = gameRoutes;
