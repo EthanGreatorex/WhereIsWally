@@ -1,0 +1,463 @@
+import { useEffect, useRef, useState } from "react";
+import type { GameData, LeaderBoardEntry } from "../types/types";
+import { fetchLeaderboard } from "../utils/gameData";
+import Logo from "../assets/logo-bg-removed.png";
+import { FaTrophy } from "react-icons/fa";
+import { FaRegSnowflake } from "react-icons/fa";
+import { FaFire } from "react-icons/fa6";
+import { BiSolidParty } from "react-icons/bi";
+import { GiThink } from "react-icons/gi";
+import { MdOutlineAccessTimeFilled } from "react-icons/md";
+interface GameCanvasProps {
+  gameData: GameData;
+  gameId: string;
+}
+
+export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [leaderBoardData, setLeaderBoardData] =
+    useState<LeaderBoardEntry[]>([]);
+
+  const [startTime] = useState<number>(Date.now());
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [guessCount, setGuessCount] = useState<number>(0);
+  const [feedback, setFeedback] = useState<{
+    text: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [completed, setCompleted] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [username, setUsername] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+
+  const navigateHome = () => {
+    window.location.href = "/";
+  };
+
+  // Fetch the leaderboard data
+  useEffect(() => {
+    if (!gameId) return;
+    const fetchData = async () => {
+      const data = await fetchLeaderboard(gameId);
+      if (typeof data === "string") {
+        console.error(data);
+        setLeaderBoardData([]);
+        return;
+      }
+      setLeaderBoardData(data);
+    };
+    fetchData();
+  }, [gameId]);
+
+  useEffect(() => {
+    if (completed) {
+      // if completed, ensure elapsedTime is the final time and don't start an interval
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [startTime, completed]);
+
+  const getMousePosition = (canvas: HTMLCanvasElement, event: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    const xCss = event.clientX - rect.left;
+    const yCss = event.clientY - rect.top;
+    const img = imageRef.current;
+    const imgX = img
+      ? Math.round((img.naturalWidth * xCss) / rect.width)
+      : null;
+    const imgY = img
+      ? Math.round((img.naturalHeight * yCss) / rect.height)
+      : null;
+    return { imgX, imgY };
+  };
+
+  const draw = () => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = imageRef.current;
+    if (!img || !img.naturalWidth) return;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = Math.max(
+      container.clientHeight,
+      window.innerHeight * 0.6
+    );
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+
+    let displayWidth = containerWidth;
+    let displayHeight = Math.floor(displayWidth / imgAspect);
+
+    const maxAllowedHeight = Math.min(
+      window.innerHeight * 0.85,
+      containerHeight
+    );
+    if (displayHeight > maxAllowedHeight) {
+      displayHeight = Math.floor(maxAllowedHeight);
+      displayWidth = Math.floor(displayHeight * imgAspect);
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = `${displayWidth}px`;
+    canvas.style.height = `${displayHeight}px`;
+    canvas.width = Math.max(1, Math.floor(displayWidth * dpr));
+    canvas.height = Math.max(1, Math.floor(displayHeight * dpr));
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
+    ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+
+    ctx.strokeStyle = "rgb(33, 37, 52)";
+
+    ctx.lineWidth = 4;
+    ctx.strokeRect(0 + 2, 0 + 2, displayWidth - 4, displayHeight - 4);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:
+${String(secs).padStart(2, "0")}`.replace(/\n/, "");
+  };
+
+  const handleUserGuess = (
+    imgX: number | null,
+    imgY: number | null,
+    clickX: number,
+    clickY: number
+  ) => {
+    if (imgX === null || imgY === null) return;
+
+    // Increment guess count
+    setGuessCount((prev) => prev + 1);
+
+    const targetX = parseFloat(gameData.positionX);
+    const targetY = parseFloat(gameData.positionY);
+    const tolerance = 10; // pixels each way
+
+    const isCorrect =
+      Math.abs(imgX - targetX) <= tolerance &&
+      Math.abs(imgY - targetY) <= tolerance;
+
+    // If not correct, check if "warm"
+    const distance = Math.sqrt(
+      Math.pow(imgX - targetX, 2) + Math.pow(imgY - targetY, 2)
+    );
+    const isWarm = distance <= 150 && !isCorrect;
+
+    const feedbackText = isCorrect ? "✓ Correct!" : isWarm ? "Warm!" : "Cold";
+
+    // Show feedback popup at click location
+    setFeedback({ text: feedbackText, x: clickX, y: clickY });
+
+    // Clear any existing timeout
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+
+    // Hide feedback after 2 seconds
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setFeedback(null);
+    }, 2000);
+
+    if (isCorrect) {
+      // freeze final elapsed time and show modal
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      setCompleted(true);
+      setShowModal(true);
+    }
+  };
+
+  useEffect(() => {
+    if (!gameData) return;
+    const img = new Image();
+    imageRef.current = img;
+    img.crossOrigin = "anonymous";
+    img.src = gameData.imageUrl || (gameData.image as string) || "";
+
+    const onLoad = () => {
+      draw();
+    };
+    img.addEventListener("load", onLoad);
+
+    // Resize observer to keep canvas responsive
+    const container = containerRef.current;
+    let ro: ResizeObserver | null = null;
+    if (container) {
+      ro = new ResizeObserver(() => {
+        draw();
+      });
+      ro.observe(container);
+    }
+
+    // window resize fallback
+    const onWindow = () => draw();
+    window.addEventListener("resize", onWindow);
+
+    return () => {
+      img.removeEventListener("load", onLoad);
+      if (ro && container) ro.unobserve(container);
+      window.removeEventListener("resize", onWindow);
+    };
+  }, [gameData]);
+
+  // attach click handler to canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const handler = (e: MouseEvent) => {
+      if (completed) return; // no more clicks after completion
+      const pos = getMousePosition(canvas, e);
+
+      // Compute coordinates relative to the container (so the popup positioned inside container lines up)
+      const containerRect = container.getBoundingClientRect();
+      const clickX = Math.round(e.clientX - containerRect.left);
+      const clickY = Math.round(e.clientY - containerRect.top);
+
+      // Pass CSS coords relative to container for popup positioning
+      handleUserGuess(pos.imgX, pos.imgY, clickX, clickY);
+    };
+    canvas.addEventListener("click", handler);
+    return () => canvas.removeEventListener("click", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameData]);
+
+  const submitLeaderboard = async () => {
+    if (!username) {
+      setSubmitMessage("Please enter a username");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitMessage(null);
+    try {
+      setSubmitMessage("Submitted — thanks!");
+      setTimeout(() => {
+        setShowModal(false);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSubmitMessage("Submission failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col-md-2 d-flex align-items-center">
+            <div className="d-flex flex-column align-items-center  justify-content-center w-100">
+              <img
+                src={Logo}
+                alt="Logo"
+                style={{
+                  width: 128,
+                  height: 128,
+                  objectFit: "contain",
+                  cursor: "pointer",
+                }}
+                className="img-hover"
+                onClick={navigateHome}
+              />
+              <div className="bg-primary rounded-3 p-3 text-white text-center mt-4 flex-grow-1 game-widget">
+                <h3>Current Time {formatTime(elapsedTime)}</h3>
+                <p style={{ fontSize: "1.1rem" }}>{guessCount} guesses</p>
+                <p className="text-white-50" style={{ fontSize: "1.1rem" }}>
+                  {gameData.title}
+                </p>
+                <div className="container d-flex align-items-center justify-content-around g-2">
+                  <p
+                    className="p-1 btn rounded-2 text-black"
+                    style={{ backgroundColor: "#8fc7dcff" }}
+                  >
+                    <FaRegSnowflake />
+                    Cold
+                  </p>
+                  <p
+                    className="p-1 btn rounded-2 text-black"
+                    style={{ backgroundColor: "#FFA500" }}
+                  >
+                    <FaFire />
+                    Warm
+                  </p>
+                  <p
+                    className="p-1 btn rounded-2 text-black"
+                    style={{ backgroundColor: "#81d481ff" }}
+                  >
+                    <BiSolidParty />
+                    Correct
+                  </p>
+                </div>
+                <p className="mt-5 text-white" style={{ fontSize: "1.2rem" }}>
+                  <FaTrophy className="me-2" style={{ color: "orange" }} />
+                  Leaderboard
+                </p>
+                <hr />
+                <div>
+                  {leaderBoardData.length === 0 ? (
+                    <div className="text-center text-white-50">No entries yet</div>
+                  ) : (
+                    leaderBoardData.map((entry, index) => (
+                      <div
+                        key={entry.id ?? index}
+                        className="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span>
+                          {index + 1}. {entry.username}
+                        </span>
+                        <span>
+                          <strong><MdOutlineAccessTimeFilled /> {formatTime(entry.time)}</strong>
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-10 d-flex align-items-center mt-5">
+            <div
+              ref={containerRef}
+              className="w-100 d-flex justify-content-center"
+              style={{ paddingBottom: 24, position: "relative" }}
+            >
+              <canvas
+                ref={canvasRef}
+                style={{
+                  display: "block",
+                  maxWidth: "100%",
+                  height: "auto",
+                  borderRadius: "20px",
+                }}
+              />
+
+              {feedback && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: feedback.x,
+                    top: feedback.y,
+                    // Place the popup above the click point so it doesn't cover the spot;
+                    // avoid centering transform which can make it look offset relative to variable width.
+                    transform: "translate(0, -120%)",
+                    backgroundColor:
+                      feedback.text === "✓ Correct!"
+                        ? "#81d481ff"
+                        : feedback.text === "Warm!"
+                        ? "#FFA500"
+                        : "#8fc7dcff",
+                    color: "#000",
+                    padding: "8px 16px",
+                    borderRadius: 8,
+                    fontWeight: "bold",
+                    fontSize: 14,
+                    zIndex: 10,
+                    whiteSpace: "nowrap",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {feedback.text}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "#0f1724",
+              color: "white",
+              padding: 24,
+              borderRadius: 12,
+              width: 360,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+            }}
+          >
+            <h3 style={{ marginTop: 0 }} className="text-center mb-4">
+              You found Waldo!
+            </h3>
+            <p>
+              <GiThink style={{ fontSize: "2rem" }} className="me-2" />
+              Guesses taken: <strong>{guessCount}</strong>
+            </p>
+            <p>
+              <MdOutlineAccessTimeFilled
+                style={{ fontSize: "2rem" }}
+                className="me-2"
+              />
+              Time taken: <strong>{formatTime(elapsedTime)}</strong>
+            </p>
+
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: "block", marginBottom: 6 }}>
+                Enter a username to be shown on the leaderboard!
+              </label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Your name"
+                style={{
+                  width: "100%",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  border: "1px solid #2b2f3a",
+                  background: "#071025",
+                  color: "white",
+                }}
+              />
+            </div>
+
+            <div className="d-flex justify-content-end mt-3">
+              <button
+                className="btn me-2"
+                onClick={() => {
+                  window.location.href = "/";
+                }}
+                disabled={submitting}
+                style={{ backgroundColor: "#70969fff" }}
+              >
+                Home
+              </button>
+              <button
+                className="btn"
+                onClick={submitLeaderboard}
+                disabled={submitting}
+                style={{ backgroundColor: "#81d481ff" }}
+              >
+                {submitting ? "Submitting..." : "Submit to leaderboard"}
+              </button>
+            </div>
+
+            {submitMessage && (
+              <div className="mt-3 text-sC">{submitMessage}</div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

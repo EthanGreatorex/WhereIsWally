@@ -10,6 +10,32 @@
   background-color: rgb(33, 37, 52) !important;
 }
 
+.img-hover:hover{
+  transition: all 0.4s;
+  transform: rotate(180deg);
+}
+.img-hover:not(:hover){
+  transition: all 0.4s;
+}
+
+.card-hover:hover{
+  transition: transform 0.2s;
+  transform: scale(1.05);
+}
+
+.card-hover:not(:hover){
+  transition: all 0.2s;
+}
+
+@media (min-width: 768px) {
+  .game-widget {
+    height: 600px !important;
+    max-width: 250px !important;
+    min-width: 250px !important;
+  }
+}
+
+
 body {
   background-color: rgb(23, 25, 36);
 }
