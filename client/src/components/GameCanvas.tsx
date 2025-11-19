@@ -285,7 +285,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       const response = await addPlayerToLeadeboard(
         gameId,
         username,
-        elapsedTime
+        elapsedTime.toString()
       );
       if (response?.status === 200) {
         setSubmitMessage("Submitted - thanks!");
@@ -295,7 +295,8 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
         navigateHome();
       }
     } catch (err) {
-      if (err?.status === 409) {
+      const error = err as { status?: number };
+      if (error?.status === 409) {
         setSubmitMessage("Submission failed. Username already exists");
       } else {
         setSubmitMessage("Something went wrong. Please try again.");

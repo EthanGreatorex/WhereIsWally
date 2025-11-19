@@ -29,7 +29,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchLeaderboard("6914722b2dfb703149c28364");
-      if (data?.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         setSkiTime(formatTime(data[0].time));
       }
     };
@@ -40,7 +40,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchLeaderboard("691d96f458ad933ed79d90cc");
-      if (data?.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         setMovieTime(formatTime(data[0].time));
       }
     };
