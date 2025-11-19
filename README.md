@@ -2,9 +2,9 @@
 
 ## The Task
 
-- A game very similar to where’s wally
+- A game very similar to where’s waldo
 - Users can click on any location inside of an image
-- If the pixel location matches the location of wally, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
+- If the pixel location matches the location of waldo, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
 - The user is timed (server-side to prevent tampering)
 - After the round the user can put themselves on a scoreboard
 
@@ -15,12 +15,12 @@
 - React & [Get started with Bootstrap · Bootstrap v5.3](https://getbootstrap.com/docs/5.3/getting-started/introduction/)  for the front-end
 - MongoDB for the database
 
-## Getting the Pixel Position of Wally
+## Getting the Pixel Position of Waldo
 
 <aside>
 💡
 
-Using [Find Image Coordinates - Get Pixel Position and Color Online](https://imageonline.io/find-coordinates-of-image/) we can find the coordinates for Wally's position in the image
+Using [Find Image Coordinates - Get Pixel Position and Color Online](https://imageonline.io/find-coordinates-of-image/) we can find the coordinates for waldos position in the image
 
 </aside>
 
@@ -62,13 +62,17 @@ function getMousePosition(canvas, event) {
 - When in-game, the image should take up a large portion of the viewport
 
 ### Super Basic Idea For Game Screen
-<img width="885" height="453" alt="image" src="https://github.com/user-attachments/assets/d507115c-17fb-4e6e-aa6d-54ac65937dea" />
 
+<img width="885" height="453" alt="image" src="https://github.com/user-attachments/assets/46b030d5-2eda-4464-bbd7-80ccfb693b0e" />
 
 ### Home Page Designs
-<img width="1276" height="946" alt="image" src="https://github.com/user-attachments/assets/9a490529-d65d-4281-bf9f-6d2a249328b4" />
 
+<img width="1684" height="843" alt="image" src="https://github.com/user-attachments/assets/91772402-e27a-4ff4-a42e-12e995fd893b" />
 
 
 ### Game View Designs
-<img width="1857" height="954" alt="image" src="https://github.com/user-attachments/assets/3c2d57ac-60b7-44ad-bb53-d1ebc1da7d75" />
+
+<img width="1857" height="954" alt="image" src="https://github.com/user-attachments/assets/55946752-c117-4218-b9bf-a9b70f82629f" />
+
+
+<img width="1706" height="830" alt="image" src="https://github.com/user-attachments/assets/c0c11c12-5868-48ab-9cfd-351ae95123f0" />
