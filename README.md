@@ -2,9 +2,9 @@
 
 ## The Task
 
-- A game very similar to where’s waldo
+- A game very similar to where’s wally
 - Users can click on any location inside of an image
-- If the pixel location matches the location of waldo, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
+- If the pixel location matches the location of wally, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
 - The user is timed (server-side to prevent tampering)
 - After the round the user can put themselves on a scoreboard
 
@@ -15,12 +15,12 @@
 - React & [Get started with Bootstrap · Bootstrap v5.3](https://getbootstrap.com/docs/5.3/getting-started/introduction/)  for the front-end
 - MongoDB for the database
 
-## Getting the Pixel Position of Waldo
+## Getting the Pixel Position of Wally
 
 <aside>
 💡
 
-Using [Find Image Coordinates - Get Pixel Position and Color Online](https://imageonline.io/find-coordinates-of-image/) we can find the coordinates for waldos position in the image
+Using [Find Image Coordinates - Get Pixel Position and Color Online](https://imageonline.io/find-coordinates-of-image/) we can find the coordinates for Wally's position in the image
 
 </aside>
 

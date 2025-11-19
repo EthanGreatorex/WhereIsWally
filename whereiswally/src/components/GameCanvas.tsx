@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import type { GameData, LeaderBoardEntry } from "../types/types";
 import { fetchLeaderboard, addPlayerToLeadeboard } from "../utils/gameData";
 import Logo from "../assets/logo-bg-removed.png";
 import { FaTrophy } from "react-icons/fa";
+import { MdSmsFailed } from "react-icons/md";
 import { FaRegSnowflake } from "react-icons/fa";
 import { FaFire } from "react-icons/fa6";
 import { BiSolidParty } from "react-icons/bi";
@@ -17,8 +19,9 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const [leaderBoardData, setLeaderBoardData] =
-    useState<LeaderBoardEntry[]>([]);
+  const [leaderBoardData, setLeaderBoardData] = useState<LeaderBoardEntry[]>(
+    []
+  );
 
   const [startTime] = useState<number>(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -34,9 +37,11 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
   const [username, setUsername] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [gaveUp, setGaveUp] = useState(false);
 
+  const navigate = useNavigate();
   const navigateHome = () => {
-    window.location.href = "/";
+    navigate("/");
   };
 
   // Fetch the leaderboard data
@@ -58,6 +63,7 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
     if (completed) {
       // if completed, ensure elapsedTime is the final time and don't start an interval
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      console.log();
       return;
     }
 
@@ -66,6 +72,15 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
     }, 100);
     return () => clearInterval(interval);
   }, [startTime, completed]);
+
+  const handleGiveUp = () => {
+    setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    setCompleted(true);
+    setGaveUp(true);
+    setTimeout(() => {
+      setShowModal(true);
+    }, 4000);
+  };
 
   const getMousePosition = (canvas: HTMLCanvasElement, event: MouseEvent) => {
     const rect = canvas.getBoundingClientRect();
@@ -123,6 +138,26 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
 
     ctx.lineWidth = 4;
     ctx.strokeRect(0 + 2, 0 + 2, displayWidth - 4, displayHeight - 4);
+
+    // Draw green circle on Wally's position if user gave up
+    if (gaveUp) {
+      const targetX = parseFloat(gameData.positionX);
+      const targetY = parseFloat(gameData.positionY);
+      
+      // Scale from natural image coordinates to displayed canvas coordinates
+      const scaledX = (targetX / img.naturalWidth) * displayWidth;
+      const scaledY = (targetY / img.naturalHeight) * displayHeight;
+      const radius = 30;
+
+      ctx.fillStyle = "rgba(129, 212, 129, 0.3)"; // Semi-transparent green
+      ctx.strokeStyle = "rgb(129, 212, 129)"; // Green
+      ctx.lineWidth = 3;
+
+      ctx.beginPath();
+      ctx.arc(scaledX, scaledY, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -145,7 +180,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
 
     const targetX = parseFloat(gameData.positionX);
     const targetY = parseFloat(gameData.positionY);
-    const tolerance = 10; // pixels each way
+    const tolerance = 20; // pixels each way
 
     const isCorrect =
       Math.abs(imgX - targetX) <= tolerance &&
@@ -155,7 +190,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
     const distance = Math.sqrt(
       Math.pow(imgX - targetX, 2) + Math.pow(imgY - targetY, 2)
     );
-    const isWarm = distance <= 150 && !isCorrect;
+    const isWarm = distance <= 350 && !isCorrect;
 
     const feedbackText = isCorrect ? "✓ Correct!" : isWarm ? "Warm!" : "Cold";
 
@@ -175,6 +210,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
       setCompleted(true);
       setShowModal(true);
+      setGaveUp(false);
     }
   };
 
@@ -230,25 +266,40 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
     };
     canvas.addEventListener("click", handler);
     return () => canvas.removeEventListener("click", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameData]);
+
+  // Redraw when gaveUp changes to show/hide the green circle
+  useEffect(() => {
+    draw();
+  }, [gaveUp]);
 
   const submitLeaderboard = async () => {
     if (!username) {
       setSubmitMessage("Please enter a username");
+      console.log(elapsedTime);
       return;
     }
     setSubmitting(true);
     setSubmitMessage(null);
     try {
-      setSubmitMessage("Submitted — thanks!");
-      addPlayerToLeadeboard(gameId, username, elapsedTime);
-      setTimeout(() => {
-        setShowModal(false);
-      }, 800);
+      const response = await addPlayerToLeadeboard(
+        gameId,
+        username,
+        elapsedTime
+      );
+      if (response?.status === 200) {
+        setSubmitMessage("Submitted - thanks!");
+        setTimeout(() => {
+          setShowModal(false);
+        }, 800);
+        navigateHome();
+      }
     } catch (err) {
-      console.error(err);
-      setSubmitMessage("Submission failed");
+      if (err?.status === 409) {
+        setSubmitMessage("Submission failed. Username already exists");
+      } else {
+        setSubmitMessage("Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -257,28 +308,32 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
   return (
     <>
       <div className="container-fluid">
-        <div className="row">
-          <div className="col-md-2 d-flex align-items-center">
-            <div className="d-flex flex-column align-items-center  justify-content-center w-100">
-              <img
-                src={Logo}
-                alt="Logo"
-                style={{
-                  width: 128,
-                  height: 128,
-                  objectFit: "contain",
-                  cursor: "pointer",
-                }}
-                className="img-hover"
-                onClick={navigateHome}
-              />
+        <div className="d-flex flex-column align-items-center justify-content-center w-100">
+          <img
+            src={Logo}
+            alt="Logo"
+            style={{
+              width: 128,
+              height: 128,
+              objectFit: "contain",
+              cursor: "pointer",
+            }}
+            className="img-hover logo"
+            onClick={navigateHome}
+          />
+        </div>
+        <div className="row flex-column-reverse flex-lg-row">
+          <div className=" col-lg-2 align-items-center">
+            <div className="d-flex flex-column align-items-center justify-content-center w-100">
               <div className="bg-primary rounded-3 p-3 text-white text-center mt-4 flex-grow-1 game-widget">
-                <h3>Current Time {formatTime(elapsedTime)}</h3>
+                <h3>
+                  Current Time <br /> {formatTime(elapsedTime)}
+                </h3>
                 <p style={{ fontSize: "1.1rem" }}>{guessCount} guesses</p>
                 <p className="text-white-50" style={{ fontSize: "1.1rem" }}>
                   {gameData.title}
                 </p>
-                <div className="container d-flex align-items-center justify-content-around g-2">
+                <div className="container d-flex  flex-md-column align-items-center justify-content-around g-2">
                   <p
                     className="p-1 btn rounded-2 text-black"
                     style={{ backgroundColor: "#8fc7dcff" }}
@@ -301,6 +356,14 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                     Correct
                   </p>
                 </div>
+                <hr />
+                <button
+                  className="p-1 btn rounded-2 text-black"
+                  style={{ backgroundColor: "#f54b4bff" }}
+                  onClick={() => handleGiveUp()}
+                >
+                  <MdSmsFailed /> Give Up
+                </button>
                 <p className="mt-5 text-white" style={{ fontSize: "1.2rem" }}>
                   <FaTrophy className="me-2" style={{ color: "orange" }} />
                   Leaderboard
@@ -308,7 +371,9 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                 <hr />
                 <div>
                   {leaderBoardData.length === 0 ? (
-                    <div className="text-center text-white-50">No entries yet</div>
+                    <div className="text-center text-white-50">
+                      No entries yet
+                    </div>
                   ) : (
                     leaderBoardData.map((entry, index) => (
                       <div
@@ -319,7 +384,10 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                           {index + 1}. {entry.username}
                         </span>
                         <span>
-                          <strong><MdOutlineAccessTimeFilled /> {formatTime(entry.time)}</strong>
+                          <strong>
+                            <MdOutlineAccessTimeFilled />{" "}
+                            {formatTime(entry.time)}
+                          </strong>
                         </span>
                       </div>
                     ))
@@ -328,7 +396,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
               </div>
             </div>
           </div>
-          <div className="col-md-10 d-flex align-items-center mt-5">
+          <div className="col-lg-9 d-flex align-items-center mt-1">
             <div
               ref={containerRef}
               className="w-100 d-flex justify-content-center"
@@ -350,8 +418,6 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                     position: "absolute",
                     left: feedback.x,
                     top: feedback.y,
-                    // Place the popup above the click point so it doesn't cover the spot;
-                    // avoid centering transform which can make it look offset relative to variable width.
                     transform: "translate(0, -120%)",
                     backgroundColor:
                       feedback.text === "✓ Correct!"
@@ -399,7 +465,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
             }}
           >
             <h3 style={{ marginTop: 0 }} className="text-center mb-4">
-              You found Waldo!
+              {gaveUp ? "You gave up!" : "You found Wally!"}
             </h3>
             <p>
               <GiThink style={{ fontSize: "2rem" }} className="me-2" />
@@ -412,45 +478,55 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
               />
               Time taken: <strong>{formatTime(elapsedTime)}</strong>
             </p>
-
-            <div style={{ marginTop: 12 }}>
-              <label style={{ display: "block", marginBottom: 6 }}>
-                Enter a username to be shown on the leaderboard!
-              </label>
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Your name"
-                style={{
-                  width: "100%",
-                  padding: "8px 10px",
-                  borderRadius: 6,
-                  border: "1px solid #2b2f3a",
-                  background: "#071025",
-                  color: "white",
-                }}
-              />
-            </div>
+            {!gaveUp && guessCount < 5 ? (
+              <div style={{ marginTop: 12 }}>
+                <label style={{ display: "block", marginBottom: 6 }}>
+                  Enter a username to be shown on the leaderboard!
+                </label>
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Your name"
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: "1px solid #2b2f3a",
+                    background: "#071025",
+                    color: "white",
+                  }}
+                />
+              </div>
+            ) : (
+              !gaveUp && (
+                <div>
+                  <p className="text-white-50">
+                    You do not qualify to be on the leaderboard because you have
+                    too many guesses.
+                  </p>
+                </div>
+              )
+            )}
 
             <div className="d-flex justify-content-end mt-3">
               <button
                 className="btn me-2"
-                onClick={() => {
-                  window.location.href = "/";
-                }}
+                onClick={() => navigateHome()}
                 disabled={submitting}
                 style={{ backgroundColor: "#70969fff" }}
               >
                 Home
               </button>
-              <button
-                className="btn"
-                onClick={submitLeaderboard}
-                disabled={submitting}
-                style={{ backgroundColor: "#81d481ff" }}
-              >
-                {submitting ? "Submitting..." : "Submit to leaderboard"}
-              </button>
+              {!gaveUp && (
+                <button
+                  className="btn"
+                  onClick={submitLeaderboard}
+                  disabled={submitting || guessCount > 5}
+                  style={{ backgroundColor: "#81d481ff" }}
+                >
+                  {submitting ? "Submitting..." : "Submit to leaderboard"}
+                </button>
+              )}
             </div>
 
             {submitMessage && (

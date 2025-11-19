@@ -40,7 +40,6 @@ export async function fetchLeaderboard(
           (rec.username as string) ??
           (rec.name as string) ??
           "Unknown";
-        // try to parse time (could be string like "90" or number)
         const rawTime = rec.time as unknown;
         const timeNum =
           typeof rawTime === "number"
@@ -69,30 +68,30 @@ export async function fetchLeaderboard(
 export async function addPlayerToLeadeboard(
   gameId: string,
   username: string,
-  time: number
+  time: string
 ) {
   try {
     const response = await fetch(
       `http://localhost:3000/games/leaderboard/${gameId}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           playerName: username,
           time: time,
         }),
       }
     );
-    if (response.status === 201) {
-      return;
+
+    if (response.status === 200) {
+      return { status: 200 };
+    } else if (response.status === 409) {
+      throw { status: 409, message: "Username already exists" };
     } else {
-      throw new Error(
-        `Failed to submit leaderboard entry, status code: ${response.status}`
-      );
+      throw { status: response.status, message: "Unknown error" };
     }
   } catch (error) {
-    console.error("Error submitting leaderboard entry:", error);
+    console.log("NETWORK OR FETCH ERROR:", error);
+    throw error;
   }
 }

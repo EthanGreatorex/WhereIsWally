@@ -38,12 +38,14 @@ gameRoutes.route("/games/leaderboard/:id").get(async (req, res) => {
   let db = database.getDb();
   let data = await db
     .collection("scores")
-    .findOne({ gameId: new ObjectId(req.params.id) });
+    .find({ gameId: new ObjectId(req.params.id) })
+    .sort({ time: 1 })
+    .limit(5)
+    .toArray();
   if (Object.keys(data).length > 0) {
     res.json(data);
   } else {
-    // This will stop the server as there is no catch statement
-    throw new Error("Data was not found :(");
+    return res.status(404).json({ error: "Leaderboard not found" });
   }
 });
 
@@ -51,6 +53,19 @@ gameRoutes.route("/games/leaderboard/:id").get(async (req, res) => {
 // http://localhost:3000/games/leaderboard/6914722b2dfb703149c28364
 gameRoutes.route("/games/leaderboard/:id").post(async (req, res) => {
   let db = database.getDb();
+
+  // Check to see if a user already exists in the database for that game
+  const existingPlayer = await db.collection("scores").findOne({
+    gameId: new ObjectId(req.params.id),
+    playerName: { $regex: new RegExp(`^${req.body.playerName}$`, "i") },
+  });
+
+  if (existingPlayer) {
+    console.log("Player already exists");
+    return res.status(409).json({
+      error: "Player already exists in the leaderboard for this game",
+    });
+  }
   try {
     const newPlayer = {
       gameId: new ObjectId(req.params.id),

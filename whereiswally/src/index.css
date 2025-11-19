@@ -10,42 +10,53 @@
   background-color: rgb(33, 37, 52) !important;
 }
 
-.img-hover:hover{
+.img-hover:hover {
   transition: all 0.4s;
   transform: rotate(180deg);
 }
-.img-hover:not(:hover){
+.img-hover:not(:hover) {
   transition: all 0.4s;
 }
 
-.card-hover:hover{
+.card-hover:hover {
   transition: transform 0.2s;
   transform: scale(1.05);
 }
 
-.card-hover:not(:hover){
+.card-hover:not(:hover) {
   transition: all 0.2s;
 }
 
-@media (min-width: 768px) {
-  .game-widget {
-    height: 600px !important;
-    max-width: 250px !important;
-    min-width: 250px !important;
+.game-widget {
+  max-width: 270px;
+  min-width: 270px;
+  z-index: 999 !important;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: 100px !important;
+    height: 100px !important;
   }
 }
 
+@media (max-width: 990px) {
+  .game-widget {
+    height: 100% !important;
+    max-width: 90vw !important;
+    min-width: 90vw !important;
+  }
+}
 
 body {
   background-color: rgb(23, 25, 36);
 }
 
-
-.snow-canvas{
+.snow-canvas {
   z-index: 0;
 }
 
-.app-root{
+.app-root {
   position: relative;
   z-index: 1;
 }
