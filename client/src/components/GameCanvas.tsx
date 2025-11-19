@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import type { GameData, LeaderBoardEntry } from "../types/types";
-import { fetchLeaderboard, addPlayerToLeadeboard } from "../utils/gameData";
+import { fetchLeaderboard, addPlayerToLeaderboard } from "../utils/gameData";
 import Logo from "../assets/logo-bg-removed.png";
 import { FaTrophy } from "react-icons/fa";
 import { MdSmsFailed } from "react-icons/md";
@@ -282,7 +282,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
     setSubmitting(true);
     setSubmitMessage(null);
     try {
-      const response = await addPlayerToLeadeboard(
+      const response = await addPlayerToLeaderboard(
         gameId,
         username,
         elapsedTime.toString()
@@ -323,10 +323,10 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
             onClick={navigateHome}
           />
         </div>
-        <div className="row flex-column-reverse flex-lg-row">
+        <div className="row flex-column-reverse flex-lg-row p-4">
           <div className=" col-lg-2 align-items-center">
             <div className="d-flex flex-column align-items-center justify-content-center w-100">
-              <div className="bg-primary rounded-3 p-3 text-white text-center mt-4 flex-grow-1 game-widget">
+              <div className="bg-primary rounded-3 p-4 text-white text-center mt-4 flex-grow-1 game-widget">
                 <h3>
                   Current Time <br /> {formatTime(elapsedTime)}
                 </h3>

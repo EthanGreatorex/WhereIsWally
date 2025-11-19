@@ -65,7 +65,7 @@ export async function fetchLeaderboard(
   }
 }
 
-export async function addPlayerToLeadeboard(
+export async function addPlayerToLeaderboard(
   gameId: string,
   username: string,
   time: string

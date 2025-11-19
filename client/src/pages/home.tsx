@@ -12,6 +12,7 @@ import { fetchLeaderboard } from "../utils/gameData";
 export default function Home() {
   const [skiTime, setSkiTime] = useState<string>("--:--");
   const [movieTime, setMovieTime] = useState<string>("--:--");
+  const [marketTime, setMarketTime] = useState<string>("--:--");
   const navigate = useNavigate();
 
   const navigateToGame = (game: string) => {
@@ -42,6 +43,17 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       const data = await fetchLeaderboard("691d96f458ad933ed79d90cc");
       if (Array.isArray(data) && data.length > 0) {
         setMovieTime(formatTime(data[0].time));
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Get the fastest time for the market set  game (game ID: 691dce917ec8bed752f3e316)
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await fetchLeaderboard("691dce917ec8bed752f3e316");
+      if (Array.isArray(data) && data.length > 0) {
+        setMarketTime(formatTime(data[0].time));
       }
     };
     fetchData();
@@ -155,9 +167,9 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
               style={{ height: "250px" }}
             />
             <div className="card-body bg-primary border-0">
-              <h5 className="card-title text-white">Movie Set</h5>
+              <h5 className="card-title text-white">Busy Market</h5>
               <p className="card-tex text-white-50">
-                Try and find Wally in this movie chaos as fast as possible.
+                Try and find Wally in this busy marker scene as fast as possible.
               </p>
               <p className="text-white-50">
                 Difficulty
@@ -175,7 +187,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
               </p>
               <p className="card-tex text-white-50">
                 <MdOutlineAccessTimeFilled className="text-white" /> Fastest
-                Time - {movieTime}
+                Time - {marketTime}
               </p>
               <a
                 onClick={() => navigateToGame("691dce917ec8bed752f3e316")}
