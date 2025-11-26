@@ -67,7 +67,7 @@ function getMousePosition(canvas, event) {
 
 ### Home Page Designs
 
-<img width="1684" height="843" alt="image" src="https://github.com/user-attachments/assets/91772402-e27a-4ff4-a42e-12e995fd893b" />
+<img width="1668" height="888" alt="image" src="https://github.com/user-attachments/assets/e9158c88-b888-4045-955c-52060382cb0b" />
 
 
 ### Game View Designs
