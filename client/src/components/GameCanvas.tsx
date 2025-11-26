@@ -185,7 +185,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
 
       const targetX = parseFloat(gameData.positionX);
       const targetY = parseFloat(gameData.positionY);
-      // Tolerance is the amount of pixels each way counted in the click zone
+      // Tolerane is the amount of pixels each way counted in the click zone
       const tolerance = 50;
 
       const isCorrect =
@@ -396,7 +396,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                         key={entry.id ?? index}
                         className="d-flex justify-content-between align-items-center mb-2"
                       >
-                        <span>  
+                        <span>
                           {index + 1}. {entry.username}
                         </span>
                         <span>
