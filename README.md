@@ -2,9 +2,9 @@
 
 ## The Task
 
-- A game very similar to where’s waldo
+- A game very similar to where’s wally
 - Users can click on any location inside of an image
-- If the pixel location matches the location of waldo, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
+- If the pixel location matches the location of wally, the user wins, otherwise a message is displayed e.g., warm, cold
 - The user is timed
 - After the round the user can put themselves on a scoreboard
 
@@ -67,7 +67,7 @@ function getMousePosition(canvas, event) {
 
 ### Home Page Designs
 
-<img width="1684" height="843" alt="image" src="https://github.com/user-attachments/assets/91772402-e27a-4ff4-a42e-12e995fd893b" />
+<img width="1668" height="888" alt="image" src="https://github.com/user-attachments/assets/e9158c88-b888-4045-955c-52060382cb0b" />
 
 
 ### Game View Designs
@@ -76,3 +76,7 @@ function getMousePosition(canvas, event) {
 
 
 <img width="1706" height="830" alt="image" src="https://github.com/user-attachments/assets/c0c11c12-5868-48ab-9cfd-351ae95123f0" />
+
+### Leaderboard View Designs
+<img width="1665" height="921" alt="image" src="https://github.com/user-attachments/assets/b874b705-5ea1-4675-810d-455f03793244" />
+
