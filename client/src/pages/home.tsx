@@ -1,7 +1,7 @@
 // IMPORTS
 import WinterWaldoIMG from "../assets/winterwaldo.jpg";
 import MovieSetIMG from "../assets/moviesetwaldo.jpg";
-import BusyMarketIMG from "../assets/marketplacewaldo.jpg"
+import BusyMarketIMG from "../assets/marketplacewaldo.jpg";
 import Logo from "../assets/logo-bg-removed.png";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
@@ -15,8 +15,14 @@ export default function Home() {
   const [marketTime, setMarketTime] = useState<string>("--:--");
   const navigate = useNavigate();
 
+  // This will take the user to the game
   const navigateToGame = (game: string) => {
     navigate(`/games/${game}`);
+  };
+
+  // This will take the user to the leaderboard view for a game
+  const navigateToLeaderboard = (game: string) => {
+    navigate(`/leaderboard/${game}`);
   };
 
   const formatTime = (seconds: number) => {
@@ -77,7 +83,10 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
 
       <div className="row g-4" style={{ marginTop: "5vh" }}>
         <div className="col-12 col-md-4">
-          <div className="card card-hover bg-primary rounded-2">
+          <div
+            className="card card-hover bg-primary rounded-2 focus-ring"
+            tabIndex={0}
+          >
             <img
               src={WinterWaldoIMG}
               className="rounded-2"
@@ -107,18 +116,86 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                 <MdOutlineAccessTimeFilled className="text-white" /> Fastest
                 Time - {skiTime}
               </p>
-              <a
+              <button
                 onClick={() => navigateToGame("6914722b2dfb703149c28364")}
-                className="btn bg-button"
+                className="btn bg-button me-3 focus-ring"
+                tabIndex={0}
               >
                 Play
-              </a>
+              </button>
+              <button
+                onClick={() =>
+                  navigateToLeaderboard("6914722b2dfb703149c28364")
+                }
+                className="btn bg-button focus-ring"
+                tabIndex={0}
+              >
+                View Leaderboard
+              </button>
             </div>
           </div>
         </div>
 
         <div className="col-12 col-md-4">
-          <div className="card card-hover bg-primary rounded-2">
+          <div
+            className="card card-hover bg-primary rounded-2 focus-ring"
+            tabIndex={0}
+          >
+            <img
+              src={BusyMarketIMG}
+              className="rounded-2"
+              alt="movie set wally image"
+              style={{ height: "250px" }}
+            />
+            <div className="card-body bg-primary border-0">
+              <h5 className="card-title text-white">Busy Market</h5>
+              <p className="card-tex text-white-50">
+                Try and find Wally in this busy marker scene as fast as
+                possible.
+              </p>
+              <p className="text-white-50">
+                Difficulty
+                <FaCircle
+                  style={{
+                    color: "yellow",
+                    marginRight: "3px",
+                    marginLeft: "7px",
+                  }}
+                />
+                <FaCircle style={{ color: "yellow", marginRight: "3px" }} />
+                <FaCircle style={{ color: "yellow", marginRight: "3px" }} />
+                <FaCircle style={{ color: "grey", marginRight: "3px" }} />
+                <FaCircle style={{ color: "grey", marginRight: "3px" }} />
+              </p>
+              <p className="card-tex text-white-50">
+                <MdOutlineAccessTimeFilled className="text-white" /> Fastest
+                Time - {marketTime}
+              </p>
+              <button
+                onClick={() => navigateToGame("691dce917ec8bed752f3e316")}
+                className="btn bg-button me-3 focus-ring"
+                tabIndex={0}
+              >
+                Play
+              </button>
+              <button
+                onClick={() =>
+                  navigateToLeaderboard("691dce917ec8bed752f3e316")
+                }
+                className="btn bg-button focus-ring"
+                tabIndex={0}
+              >
+                View Leaderboard
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div
+            className="card card-hover bg-primary rounded-2 focus-ring"
+            tabIndex={0}
+          >
             <img
               src={MovieSetIMG}
               className="rounded-2"
@@ -148,63 +225,34 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                 <MdOutlineAccessTimeFilled className="text-white" /> Fastest
                 Time - {movieTime}
               </p>
-              <a
+              <button
                 onClick={() => navigateToGame("691d96f458ad933ed79d90cc")}
-                className="btn bg-button"
+                className="btn bg-button me-3 focus-ring"
+                tabIndex={0}
               >
                 Play
-              </a>
+              </button>
+              <button
+                onClick={() =>
+                  navigateToLeaderboard("691d96f458ad933ed79d90cc")
+                }
+                className="btn bg-button focus-ring"
+                tabIndex={0}
+              >
+                View Leaderboard
+              </button>
             </div>
           </div>
         </div>
 
         <div className="col-12 col-md-4">
-          <div className="card card-hover bg-primary rounded-2">
-            <img
-              src={BusyMarketIMG}
-              className="rounded-2"
-              alt="movie set wally image"
-              style={{ height: "250px" }}
-            />
-            <div className="card-body bg-primary border-0">
-              <h5 className="card-title text-white">Busy Market</h5>
-              <p className="card-tex text-white-50">
-                Try and find Wally in this busy marker scene as fast as possible.
-              </p>
-              <p className="text-white-50">
-                Difficulty
-                <FaCircle
-                  style={{
-                    color: "yellow",
-                    marginRight: "3px",
-                    marginLeft: "7px",
-                  }}
-                />
-                <FaCircle style={{ color: "yellow", marginRight: "3px" }} />
-                <FaCircle style={{ color: "yellow", marginRight: "3px" }} />
-                <FaCircle style={{ color: "grey", marginRight: "3px" }} />
-                <FaCircle style={{ color: "grey", marginRight: "3px" }} />
-              </p>
-              <p className="card-tex text-white-50">
-                <MdOutlineAccessTimeFilled className="text-white" /> Fastest
-                Time - {marketTime}
-              </p>
-              <a
-                onClick={() => navigateToGame("691dce917ec8bed752f3e316")}
-                className="btn bg-button"
-              >
-                Play
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="col-12 col-md-4">
-          <div className="card card-hover bg-primary rounded-2">
+          <div
+            className="card card-hover bg-primary rounded-2 focus-ring"
+            tabIndex={0}
+          >
             <div className="card-body bg-primary border-0">
               <h5 className="card-title text-white">Coming soon...</h5>
-              <p className="card-tex text-white-50">
-                ...
-              </p>
+              <p className="card-tex text-white-50">...</p>
               <p className="text-white-50">
                 Difficulty
                 <FaCircle
@@ -219,16 +267,17 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                 <FaCircle style={{ color: "grey", marginRight: "3px" }} />
                 <FaCircle style={{ color: "grey", marginRight: "3px" }} />
               </p>
-              <p className="card-tex text-white-50">
+              <p className="card-tex text-white-50 focus-ring">
                 <MdOutlineAccessTimeFilled className="text-white" /> Fastest
                 Time -
               </p>
-              <a
+              <button
                 onClick={() => navigateToGame("691dce917ec8bed752f3e316")}
-                className="btn bg-button disabled"
+                className="btn bg-button disabled focus-ring"
+                tabIndex={0}
               >
                 Play
-              </a>
+              </button>
             </div>
           </div>
         </div>

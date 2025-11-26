@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import type { GameData, LeaderBoardEntry } from "../types/types";
 import { fetchLeaderboard, addPlayerToLeaderboard } from "../utils/gameData";
@@ -96,7 +96,7 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
     return { imgX, imgY };
   };
 
-  const draw = () => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
@@ -141,16 +141,18 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
 
     // Draw green circle on Wally's position if user gave up
     if (gaveUp) {
+      // Get Wally's position
       const targetX = parseFloat(gameData.positionX);
       const targetY = parseFloat(gameData.positionY);
-      
+
       // Scale from natural image coordinates to displayed canvas coordinates
       const scaledX = (targetX / img.naturalWidth) * displayWidth;
       const scaledY = (targetY / img.naturalHeight) * displayHeight;
       const radius = 30;
 
-      ctx.fillStyle = "rgba(129, 212, 129, 0.3)"; // Semi-transparent green
-      ctx.strokeStyle = "rgb(129, 212, 129)"; // Green
+      // Place a green highlighted circle around Wally
+      ctx.fillStyle = "rgba(129, 212, 129, 0.3)";
+      ctx.strokeStyle = "rgb(129, 212, 129)";
       ctx.lineWidth = 3;
 
       ctx.beginPath();
@@ -158,8 +160,9 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
       ctx.fill();
       ctx.stroke();
     }
-  };
+  }, [gameData, gaveUp]);
 
+  // This will take a seconds amount e.g., 70 and return a minute format e.g., 01:10
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -167,59 +170,67 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
 ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
   };
 
-  const handleUserGuess = (
-    imgX: number | null,
-    imgY: number | null,
-    clickX: number,
-    clickY: number
-  ) => {
-    if (imgX === null || imgY === null) return;
+  // This handles the logic for when a user clicks on the canvas, and will determine if the user has guessed correctly
+  const handleUserGuess = useCallback(
+    (
+      imgX: number | null,
+      imgY: number | null,
+      clickX: number,
+      clickY: number
+    ) => {
+      if (imgX === null || imgY === null) return;
 
-    // Increment guess count
-    setGuessCount((prev) => prev + 1);
+      // Increment guess count
+      setGuessCount((prev) => prev + 1);
 
-    const targetX = parseFloat(gameData.positionX);
-    const targetY = parseFloat(gameData.positionY);
-    const tolerance = 20; // pixels each way
+      const targetX = parseFloat(gameData.positionX);
+      const targetY = parseFloat(gameData.positionY);
+      // Tolerane is the amount of pixels each way counted in the click zone
+      const tolerance = 50;
 
-    const isCorrect =
-      Math.abs(imgX - targetX) <= tolerance &&
-      Math.abs(imgY - targetY) <= tolerance;
+      const isCorrect =
+        // Math.abs will return the absolute number e.g., (5 rather than -5)
+        Math.abs(imgX - targetX) <= tolerance &&
+        Math.abs(imgY - targetY) <= tolerance;
 
-    // If not correct, check if "warm"
-    const distance = Math.sqrt(
-      Math.pow(imgX - targetX, 2) + Math.pow(imgY - targetY, 2)
-    );
-    const isWarm = distance <= 350 && !isCorrect;
+      // If not correct, check if "warm"
+      const distance = Math.sqrt(
+        Math.pow(imgX - targetX, 2) + Math.pow(imgY - targetY, 2)
+      );
+      const isWarm = distance <= 250 && !isCorrect;
 
-    const feedbackText = isCorrect ? "✓ Correct!" : isWarm ? "Warm!" : "Cold";
+      const feedbackText = isCorrect ? "✓ Correct!" : isWarm ? "Warm!" : "Cold";
 
-    // Show feedback popup at click location
-    setFeedback({ text: feedbackText, x: clickX, y: clickY });
+      // Show feedback popup at click location
+      setFeedback({ text: feedbackText, x: clickX, y: clickY });
 
-    // Clear any existing timeout
-    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      // Clear any existing timeout
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
 
-    // Hide feedback after 2 seconds
-    feedbackTimeoutRef.current = setTimeout(() => {
-      setFeedback(null);
-    }, 2000);
+      // Hide feedback after 2 seconds
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedback(null);
+      }, 2000);
 
-    if (isCorrect) {
-      // freeze final elapsed time and show modal
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-      setCompleted(true);
-      setShowModal(true);
-      setGaveUp(false);
-    }
-  };
+      if (isCorrect) {
+        // freeze final elapsed time and show modal
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+        setCompleted(true);
+        setShowModal(true);
+        setGaveUp(false);
+      }
+    },
+    [gameData, startTime]
+  );
 
   useEffect(() => {
     if (!gameData) return;
     const img = new Image();
     imageRef.current = img;
     img.crossOrigin = "anonymous";
-    img.src = gameData.imageUrl || (gameData.image as string) || "";
+    img.src = gameData.imageUrl || "";
 
     const onLoad = () => {
       draw();
@@ -236,7 +247,6 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       ro.observe(container);
     }
 
-    // window resize fallback
     const onWindow = () => draw();
     window.addEventListener("resize", onWindow);
 
@@ -245,7 +255,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       if (ro && container) ro.unobserve(container);
       window.removeEventListener("resize", onWindow);
     };
-  }, [gameData]);
+  }, [gameData, draw]);
 
   // attach click handler to canvas
   useEffect(() => {
@@ -256,7 +266,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       if (completed) return; // no more clicks after completion
       const pos = getMousePosition(canvas, e);
 
-      // Compute coordinates relative to the container (so the popup positioned inside container lines up)
+      // Compute coordinates relative to the container (so the popup will show more accurate to where to user clicked)
       const containerRect = container.getBoundingClientRect();
       const clickX = Math.round(e.clientX - containerRect.left);
       const clickY = Math.round(e.clientY - containerRect.top);
@@ -266,17 +276,17 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
     };
     canvas.addEventListener("click", handler);
     return () => canvas.removeEventListener("click", handler);
-  }, [gameData]);
+  }, [gameData, completed, handleUserGuess]);
 
   // Redraw when gaveUp changes to show/hide the green circle
   useEffect(() => {
     draw();
-  }, [gaveUp]);
+  }, [gaveUp, draw]);
 
+  // This will submit a time to the leaderboard
   const submitLeaderboard = async () => {
     if (!username) {
       setSubmitMessage("Please enter a username");
-      console.log(elapsedTime);
       return;
     }
     setSubmitting(true);
@@ -358,13 +368,18 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                   </p>
                 </div>
                 <hr />
+                <p className="text-white-50">
+                  Giving up will highlight Wally in green
+                </p>
                 <button
-                  className="p-1 btn rounded-2 text-black"
+                  className="p-1 btn rounded-2 text-black focus-ring"
                   style={{ backgroundColor: "#f54b4bff" }}
                   onClick={() => handleGiveUp()}
+                  tabIndex={0}
                 >
                   <MdSmsFailed /> Give Up
                 </button>
+
                 <p className="mt-5 text-white" style={{ fontSize: "1.2rem" }}>
                   <FaTrophy className="me-2" style={{ color: "orange" }} />
                   Leaderboard
@@ -411,6 +426,8 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                   height: "auto",
                   borderRadius: "20px",
                 }}
+                tabIndex={0}
+                className="focus-ring"
               />
 
               {feedback && (
