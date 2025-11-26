@@ -2,9 +2,9 @@
 
 ## The Task
 
-- A game very similar to where’s waldo
+- A game very similar to where’s wally
 - Users can click on any location inside of an image
-- If the pixel location matches the location of waldo, the user wins, otherwise a message is displayed e.g., warm, cold, freezing, boiling
+- If the pixel location matches the location of wally, the user wins, otherwise a message is displayed e.g., warm, cold
 - The user is timed
 - After the round the user can put themselves on a scoreboard
 
