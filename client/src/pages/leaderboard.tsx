@@ -102,7 +102,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
           <img
             src={gameData?.imageUrl}
             className="rounded-2 img-fluid"
-            alt="movie set wally image"
+            alt="wheres wally scene"
             style={{ height: "350px" }}
           />
 
