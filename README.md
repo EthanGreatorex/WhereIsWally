@@ -76,3 +76,7 @@ function getMousePosition(canvas, event) {
 
 
 <img width="1706" height="830" alt="image" src="https://github.com/user-attachments/assets/c0c11c12-5868-48ab-9cfd-351ae95123f0" />
+
+### Leaderboard View Designs
+<img width="1665" height="921" alt="image" src="https://github.com/user-attachments/assets/b874b705-5ea1-4675-810d-455f03793244" />
+
