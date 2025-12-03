@@ -25,6 +25,7 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
 
   const [startTime] = useState<number>(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [bonusSeconds, setBonusSeconds] = useState(0);
   const [guessCount, setGuessCount] = useState<number>(0);
   const [feedback, setFeedback] = useState<{
     text: string;
@@ -38,6 +39,8 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [gaveUp, setGaveUp] = useState(false);
+  const [wizardFound, setWizardFound] = useState(false);
+  const [wendaFound, setWendaFound] = useState(false);
 
   const navigate = useNavigate();
   const navigateHome = () => {
@@ -142,8 +145,8 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
     // Draw green circle on Wally's position if user gave up
     if (gaveUp) {
       // Get Wally's position
-      const targetX = parseFloat(gameData.positionX);
-      const targetY = parseFloat(gameData.positionY);
+      const targetX = parseFloat(gameData.waldoPosX);
+      const targetY = parseFloat(gameData.waldoPosY);
 
       // Scale from natural image coordinates to displayed canvas coordinates
       const scaledX = (targetX / img.naturalWidth) * displayWidth;
@@ -164,11 +167,14 @@ export default function GameCanvas({ gameData, gameId }: GameCanvasProps) {
 
   // This will take a seconds amount e.g., 70 and return a minute format e.g., 01:10
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const normalizedSeconds = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(normalizedSeconds / 60);
+    const secs = normalizedSeconds % 60;
     return `${String(mins).padStart(2, "0")}:
 ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
   };
+
+  const effectiveTime = Math.max(0, elapsedTime - bonusSeconds);
 
   // This handles the logic for when a user clicks on the canvas, and will determine if the user has guessed correctly
   const handleUserGuess = useCallback(
@@ -183,10 +189,45 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       // Increment guess count
       setGuessCount((prev) => prev + 1);
 
-      const targetX = parseFloat(gameData.positionX);
-      const targetY = parseFloat(gameData.positionY);
+      const targetX = parseFloat(gameData.waldoPosX);
+      const targetY = parseFloat(gameData.waldoPosY);
+      const wendaX = parseFloat(gameData.wendaPosX ?? "NaN");
+      const wendaY = parseFloat(gameData.wendaPosY ?? "NaN");
+      const wizardX = parseFloat(gameData.wizardPosX ?? "NaN");
+      const wizardY = parseFloat(gameData.wizardPosY ?? "NaN");
       // Tolerane is the amount of pixels each way counted in the click zone
       const tolerance = 50;
+
+      const isWendaHit =
+        !wendaFound &&
+        Number.isFinite(wendaX) &&
+        Number.isFinite(wendaY) &&
+        Math.abs(imgX - wendaX) <= tolerance &&
+        Math.abs(imgY - wendaY) <= tolerance;
+
+      const isWizardHit =
+        !wizardFound &&
+        Number.isFinite(wizardX) &&
+        Number.isFinite(wizardY) &&
+        Math.abs(imgX - wizardX) <= tolerance &&
+        Math.abs(imgY - wizardY) <= tolerance;
+
+      if (isWendaHit || isWizardHit) {  
+        setBonusSeconds((prev) => prev + 15);
+        if (isWendaHit) setWendaFound(true);
+        if (isWizardHit) setWizardFound(true);
+
+        setFeedback({ text: "Bonus! -15 seconds!", x: clickX, y: clickY });
+
+        if (feedbackTimeoutRef.current) {
+          clearTimeout(feedbackTimeoutRef.current);
+        }
+        feedbackTimeoutRef.current = setTimeout(() => {
+          setFeedback(null);
+        }, 2000);
+
+        return;
+      }
 
       const isCorrect =
         // Math.abs will return the absolute number e.g., (5 rather than -5)
@@ -222,7 +263,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
         setGaveUp(false);
       }
     },
-    [gameData, startTime]
+    [gameData, startTime, wendaFound, wizardFound]
   );
 
   useEffect(() => {
@@ -295,7 +336,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
       const response = await addPlayerToLeaderboard(
         gameId,
         username,
-        elapsedTime.toString()
+        effectiveTime.toString()
       );
       if (response?.status === 200) {
         setSubmitMessage("Submitted - thanks!");
@@ -338,7 +379,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
             <div className="d-flex flex-column align-items-center justify-content-center w-100">
               <div className="bg-primary rounded-3 p-4 text-white text-center mt-4 flex-grow-1 game-widget">
                 <h3>
-                  Current Time <br /> {formatTime(elapsedTime)}
+                  Current Time <br /> {formatTime(effectiveTime)}
                 </h3>
                 <p style={{ fontSize: "1.1rem" }}>{guessCount} guesses</p>
                 <p className="text-white-50" style={{ fontSize: "1.1rem" }}>
@@ -494,7 +535,7 @@ ${String(secs).padStart(2, "0")}`.replace(/\n/, "");
                 style={{ fontSize: "2rem" }}
                 className="me-2"
               />
-              Time taken: <strong>{formatTime(elapsedTime)}</strong>
+              Time taken: <strong>{formatTime(effectiveTime)}</strong>
             </p>
             {!gaveUp && guessCount < 5 ? (
               <div style={{ marginTop: 12 }}>

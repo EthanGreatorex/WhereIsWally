@@ -2,8 +2,12 @@
 export interface GameData {
   id: string;
   title: string;
-  positionX: string;
-  positionY: string;
+  waldoPosX: string;
+  waldoPosY: string;
+  wendaPosX?: string;
+  wendaPosY?: string;
+  wizardPosX?: string;
+  wizardPosY?: string;
   imageUrl: string;
   image?: string;
 }

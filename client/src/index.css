@@ -62,3 +62,47 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* Instructions modal */
+.instructions-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.instructions-modal {
+  width: 100%;
+  max-width: 720px;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 2px solid rgb(95, 103, 141);
+}
+
+.instructions-target-card {
+  background: rgba(15, 16, 25, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.instructions-image-frame {
+  background: rgba(15, 16, 25, 0.9);
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  padding: 0.35rem;
+}
+
+.instructions-placeholder {
+  background: rgba(15, 16, 25, 0.9);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .instructions-modal {
+    margin: 1rem;
+    max-width: 100%;
+  }
+}
+
